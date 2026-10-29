@@ -27,7 +27,7 @@
     3. File .env hoàn chỉnh
         
         ```python
-        JWT_SECRET=7ba8364368b709322d8880c0b75cbd4d9f2349979530d17181a4091b1a2ab9d3
+        JWT_SECRET=7ba8364368b70...
         JWT_ALGORITHM=HS256
         ACCESS_TOKEN_EXPIRE_MINUTES=5
         REFRESH_TOKEN_EXPIRE_DAYS=7
