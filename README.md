@@ -67,7 +67,7 @@
         
 ---
 
-4. Chạy init user để thêm user mới login
+4. Chạy lệnh init user để thêm user mới login
    ```python
    python -m Console.Commands.init_user
    ```
