@@ -65,17 +65,21 @@
         alembic upgrade head
         ```
         
-
 ---
 
-4. Start server lên
+4. Chạy init user để thêm user mới login
+   ```python
+   python -m Console.Commands.init_user
+   ```
+   
+---
+
+5. Start server lên
     
     ```python
     source venv/bin/activate # bật môi trường ảo bật rồi thì thôi
     uvicorn main:app --reload
     ```
-    
 
 ---
-
-5. Mở postman lên test
+6. Mở postman lên test
