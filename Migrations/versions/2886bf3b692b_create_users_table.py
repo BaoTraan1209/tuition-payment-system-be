@@ -1,4 +1,3 @@
-
 """create users table
 
 Revision ID: 2886bf3b692b
@@ -23,10 +22,12 @@ def upgrade() -> None:
         sa.Column('username', sa.String(length=50), nullable=False),
         sa.Column('password', sa.String(length=255), nullable=False),
         sa.Column('fullname', sa.String(length=100), nullable=False),
+        sa.Column('mssv', sa.String(length=20), nullable=True),
         sa.Column('phone', sa.String(length=20), nullable=True),
         sa.Column('email', sa.String(length=100), nullable=True),
         sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('username')
+        sa.UniqueConstraint('username'),
+        sa.UniqueConstraint('mssv', name='uq_users_mssv')
     )
 
 

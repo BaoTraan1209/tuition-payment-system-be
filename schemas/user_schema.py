@@ -4,6 +4,7 @@ class UserProfileResponse(BaseModel):
     id: str
     username: str
     fullname: str
+    mssv: str | None = None
     phone: str | None = None
     email: str | None = None
 

@@ -25,6 +25,13 @@ class UserRepository(IUserRepository):
             .first()
         )
 
+    def find_by_mssv(self, mssv: str) -> User | None:
+        return (
+            self.db.query(User)
+            .filter(User.mssv == mssv.strip().upper())
+            .first()
+        )
+
     def save(self, user: User) -> None:
         self.db.add(user)
         self.db.commit()

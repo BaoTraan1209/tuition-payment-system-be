@@ -20,7 +20,7 @@ def get_my_profile(
 ):
     user_service = UserService(db)
 
-    return user_service.get_profile(UUID(str(current_user.user_id)))
+    return user_service.get_profile(current_user.id)
 
 
 @router.patch("/me", response_model=UserProfileResponse)
@@ -33,7 +33,7 @@ def update_my_profile(
 
     try:
         return user_service.edit_profile(
-            UUID(str(current_user.user_id)),
+            current_user.id,
             data.model_dump(exclude_unset=True),
         )
     except IntegrityError:

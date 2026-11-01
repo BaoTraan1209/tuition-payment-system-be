@@ -1,9 +1,13 @@
 
+import re
 from getpass import getpass
 
 from config.db import SessionLocal
 from Models.user import User
 from Security.password import hash_password
+
+
+MSSV_PATTERN = re.compile(r"[0-9A-Z]{8}")
 
 
 def init_user():
@@ -13,8 +17,9 @@ def init_user():
     password = getpass("Password: ")
     confirm_password = getpass("Confirm password: ")
     fullname = input("Full name: ").strip()
-    phone = input("Phone (optional): ").strip() or None
-    email = input("Email (optional): ").strip() or None
+    mssv = input("MSSV: ").strip().upper() or None
+    phone = input("Phone: ").strip() or None
+    email = input("Email: ").strip() or None
 
     if not username or not password or not fullname:
         print("Username, password and full name are required.")
@@ -30,6 +35,10 @@ def init_user():
 
     if password != confirm_password:
         print("Passwords do not match.")
+        return
+
+    if mssv and not MSSV_PATTERN.fullmatch(mssv):
+        print("MSSV must be 8 letters/digits, e.g. 522H0113.")
         return
 
     if len(fullname) > 100:
@@ -57,10 +66,15 @@ def init_user():
             print(f"Username '{username}' already exists.")
             return
 
+        if mssv and db.query(User).filter(User.mssv == mssv).first():
+            print(f"MSSV '{mssv}' is already linked to another account.")
+            return
+
         user = User(
             username=username,
             password_hash=hash_password(password),
             fullname=fullname,
+            mssv=mssv,
             phone=phone,
             email=email
         )
@@ -72,6 +86,7 @@ def init_user():
         print(f"User ID: {user.id}")
         print(f"Username: {user.username}")
         print(f"Full name: {user.fullname}")
+        print(f"MSSV: {user.mssv or '(chưa có)'}")
 
     except Exception as e:
         db.rollback()

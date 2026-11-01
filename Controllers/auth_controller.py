@@ -1,5 +1,4 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 from jose import JWTError
 from pydantic import BaseModel
@@ -9,13 +8,18 @@ from schemas.auth_schema import LoginRequest
 from Services.auth_service import AuthService
 from Services.user_service import UserService
 from Security.auth_dependency import get_current_user
-from Security.jwt import decode_token, create_access_token, get_token_ttl
+from Security.jwt import (
+    decode_token,
+    create_access_token,
+    create_refresh_token,
+    get_token_ttl,
+    REFRESH_TOKEN_EXPIRE_DAYS,
+)
 from Helpers.response_helper import send_success_response
 
 from schemas.user_schema import UserProfileResponse
 
 router = APIRouter(prefix="/api/auth", tags=["Authentication"])
-bearer = HTTPBearer()
 
 class RefreshTokenRequest(BaseModel):
     refresh_token: str
@@ -38,8 +42,10 @@ def login(
 
     result = {
         "access_token": create_access_token(str(user.id)),
+        "refresh_token": create_refresh_token(str(user.id)),
         "token_type": "bearer",
         "expires_in": get_token_ttl(),
+        "refresh_expires_in": REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
         "user": user_data
     }
 
@@ -50,41 +56,43 @@ def login(
 
 @router.post("/refresh")
 def refresh(
-    credentials: HTTPAuthorizationCredentials = Depends(bearer)
+    data: RefreshTokenRequest,
+    db: Session = Depends(get_db)
 ):
+    """Nhận refresh_token (body JSON), trả về access_token mới."""
     try:
-        payload = decode_token(credentials.credentials)
-
-        if payload.get("type") != "access":
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid access token"
-            )
-
-        user_id = payload.get("sub")
-
-        if not user_id:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid access token"
-            )
-
-        result = {
-            "access_token": create_access_token(user_id),
-            "token_type": "bearer",
-            "expires_in": get_token_ttl()
-        }
-
-        return send_success_response(
-            data=result,
-            msg="Refresh successful"
-        )
-
+        payload = decode_token(data.refresh_token)
     except JWTError:
         raise HTTPException(
             status_code=401,
-            detail="Access token expired or invalid"
+            detail="Refresh token expired or invalid"
         )
+
+    if payload.get("type") != "refresh" or not payload.get("sub"):
+        raise HTTPException(
+            status_code=401,
+            detail="Invalid refresh token"
+        )
+
+    user_id = payload["sub"]
+
+    # Tài khoản bị xoá thì không cấp lại token
+    if UserService(db).user_repository.find_by_id(user_id) is None:
+        raise HTTPException(
+            status_code=401,
+            detail="User not found"
+        )
+
+    result = {
+        "access_token": create_access_token(user_id),
+        "token_type": "bearer",
+        "expires_in": get_token_ttl()
+    }
+
+    return send_success_response(
+        data=result,
+        msg="Refresh successful"
+    )
 
 @router.get("/me")
 def get_profile(

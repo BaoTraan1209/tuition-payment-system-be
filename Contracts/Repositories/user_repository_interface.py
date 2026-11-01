@@ -14,5 +14,9 @@ class IUserRepository(ABC):
         pass
 
     @abstractmethod
+    def find_by_mssv(self, mssv: str) -> User | None:
+        pass
+
+    @abstractmethod
     def save(self, user: User) -> None:
         pass
