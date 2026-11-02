@@ -1,0 +1,21 @@
+from abc import ABC, abstractmethod
+from Models.payment import Payment
+
+
+class IPaymentRepository(ABC):
+
+    @abstractmethod
+    def find_by_id(self, id: int) -> Payment | None:
+        pass
+
+    @abstractmethod
+    def find_by_order_id(self, order_id: str) -> Payment | None:
+        pass
+
+    @abstractmethod
+    def save(self, payment: Payment) -> None:
+        pass
+
+    @abstractmethod
+    def update(self, payment: Payment) -> None:
+        pass

@@ -1,36 +1,61 @@
-from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from config.db import get_db
 from Security.auth_dependency import get_current_user
-from Services.payment_service import create_payment_request, complete_payment
+from Services.payment_service import PaymentService
+from Helpers.response_helper import send_success_response
 
-router = APIRouter(prefix="/payments", tags=["Payments"])
+from schemas.payment_schema import (
+    CreatePaymentRequest,
+    CreatePaymentResponse
+)
 
+router = APIRouter(prefix="/api/payment", tags=["Payment"])
 
-class PaymentRequest(BaseModel):
-    tuition_id: int = Field(gt=0)
+@router.post("/create")
+def create_payment(
+    data: CreatePaymentRequest,
+    request: Request,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    payment_service = PaymentService(db)
 
+    ip_address = request.client.host if request.client else "127.0.0.1"
 
-class PaymentConfirmation(BaseModel):
-    payment_id: int = Field(gt=0)
-    otp: str = Field(min_length=6, max_length=6, pattern=r"^[0-9]{6}$")
+    result = payment_service.create_payment(
+        user_id=str(current_user.id),
+        amount=data.amount,
+        ip_address=ip_address
+    )
 
+    response_data = CreatePaymentResponse(
+        order_id=result["payment"].order_id,
+        amount=result["payment"].amount,
+        status=result["payment"].status,
+        payment_url=result["payment_url"]
+    )
 
-@router.post("")
-def create_payment_endpoint(data: PaymentRequest, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    try:
-        result = create_payment_request(db, int(current_user.payer_id), data.tuition_id)
-        return {"success": True, "message": "Payment request created.", "data": result}
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error))
+    return send_success_response(
+        data=response_data.model_dump(),
+        msg="Payment URL created successfully"
+    )
 
+@router.get("/vnpay/return")
+def vnpay_return(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    params = dict(request.query_params)
 
-@router.post("/confirm")
-def confirm_payment_endpoint(data: PaymentConfirmation, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
-    try:
-        result = complete_payment(db, int(current_user.payer_id), data.payment_id, data.otp)
-        return {"success": True, "message": result["message"], "data": result}
-    except ValueError as error:
-        raise HTTPException(status_code=400, detail=str(error))
+    return PaymentService(db).handle_return(params)
+
+@router.get("/vnpay/ipn")
+def vnpay_ipn(
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    params = dict(request.query_params)
+
+    return PaymentService(db).handle_ipn(params)

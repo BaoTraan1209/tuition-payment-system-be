@@ -1,80 +1,207 @@
-from sqlalchemy import text
+
+import uuid
+
 from sqlalchemy.orm import Session
 
-from Repositories.payment_repository import (
-    create_payment, get_payment_for_payer, lock_account, debit_account,
-    mark_tuition_paid, mark_payment_success, create_transaction
-)
-from Services.otp_service import verify_otp
-from Services.notification_service import send_payment_result_email
+from Models.payment import Payment
+from Models.payment_log import PaymentLog
+
+from Repositories.payment_repository import PaymentRepository
+from Repositories.payment_log_repository import PaymentLogRepository
+
+from VNPAY.Services.vnpay_service import VnpayService
+
+from Enums.payment_status_enum import PaymentStatusEnum
+from Enums.payment_event_enum import PaymentEventEnum
 
 
-def create_payment_request(db: Session, payer_id: int, tuition_id: int):
-    if payer_id <= 0 or tuition_id <= 0:
-        raise ValueError("Payer ID and tuition ID must be positive.")
-    # The auth dependency has queried the current user using this same Session.
-    # End that read transaction before starting the payment transaction.
-    db.rollback()
-    try:
-        with db.begin():
-            result = create_payment(db, payer_id, tuition_id)
-        return result
-    except ValueError:
-        raise
-    except Exception:
-        raise
+class PaymentService:
 
+    def __init__(self, db: Session):
+        self.db = db
 
-def complete_payment(db: Session, payer_id: int, payment_id: int, otp: str):
-    if payer_id <= 0 or payment_id <= 0:
-        raise ValueError("Invalid payer or payment ID.")
+        self.payment_repository = PaymentRepository(db)
+        self.payment_log_repository = PaymentLogRepository(db)
+        self.vnpay_service = VnpayService()
 
-    # Confirm ownership before consuming OTP. OTP is single-use; if payment fails,
-    # the payer can create/request a new OTP for the pending payment.
-    payment = get_payment_for_payer(db, payment_id, payer_id)
-    if not payment:
-        raise ValueError("Payment was not found for the current payer.")
-    if payment["status"] != "PENDING":
-        raise ValueError("Only pending payments can be completed.")
-    db.rollback()  # close read transaction before OTP verification starts
+    def create_payment(
+        self,
+        user_id: str,
+        amount: int,
+        ip_address: str
+    ) -> dict:
 
-    verify_otp(db, payment_id, otp)
+        if amount <= 0:
+            raise ValueError("Payment amount must be greater than zero")
 
-    email = None
-    amount = payment["amount"]
-    try:
-        with db.begin():
-            current_payment = get_payment_for_payer(db, payment_id, payer_id, lock=True)
-            if not current_payment or current_payment["status"] != "PENDING":
-                raise ValueError("Payment is no longer pending.")
-
-            account = lock_account(db, payer_id)
-            if not account:
-                raise ValueError("Payment account was not found.")
-            if account["status"] != "ACTIVE":
-                raise ValueError("The account is not active.")
-            if account["balance"] < amount:
-                raise ValueError("Insufficient balance.")
-
-            if not debit_account(db, payer_id, amount):
-                raise ValueError("Unable to debit the account. Please retry.")
-            if not mark_tuition_paid(db, current_payment["tuition_id"]):
-                raise ValueError("Tuition was already paid or is no longer payable.")
-
-            mark_payment_success(db, payment_id)
-            create_transaction(db, payer_id, payment_id, amount)
-            row = db.execute(text("SELECT email FROM payers WHERE payer_id = :payer_id"),
-                             {"payer_id": payer_id}).mappings().first()
-            email = row["email"] if row else None
-    except ValueError:
-        raise
-
-    if email:
         try:
-            send_payment_result_email(email, payment_id, float(amount), "SUCCESS")
-        except Exception:
-            # Payment is committed; email failure must not undo a successful payment.
-            pass
+            order_id = uuid.uuid4().hex
 
-    return {"payment_id": payment_id, "amount": float(amount), "status": "SUCCESS",
-            "message": "Tuition payment completed successfully."}
+            payment = Payment(
+                order_id=order_id,
+                user_id=user_id,
+                amount=amount,
+                status=PaymentStatusEnum.PENDING.value
+            )
+
+            self.payment_repository.save(payment)
+
+            self.payment_log_repository.save(
+                PaymentLog(
+                    payment_id=payment.id,
+                    event=PaymentEventEnum.CREATED.value,
+                    message="Payment transaction created"
+                )
+            )
+
+            payment_url = self.vnpay_service.create_payment_url(
+                order_id=order_id,
+                amount=amount,
+                ip_address=ip_address
+            )
+
+            self.db.commit()
+
+            return {
+                "payment": payment,
+                "payment_url": payment_url
+            }
+
+        except Exception:
+            self.db.rollback()
+            raise
+
+    def handle_return(self, params: dict) -> dict:
+
+        if not self.vnpay_service.verify_payment_response(params):
+            return {
+                "success": False,
+                "message": "Invalid payment signature"
+            }
+
+        order_id = params.get("vnp_TxnRef")
+
+        if not order_id:
+            return {
+                "success": False,
+                "message": "Missing order ID"
+            }
+
+        payment = self.payment_repository.find_by_order_id(order_id)
+
+        if not payment:
+            return {
+                "success": False,
+                "message": "Payment not found"
+            }
+
+        amount = params.get("vnp_Amount")
+
+        if not amount or not amount.isdigit():
+            return {
+                "success": False,
+                "message": "Invalid payment amount"
+            }
+
+        if int(amount) != payment.amount * 100:
+            return {
+                "success": False,
+                "message": "Invalid payment amount"
+            }
+
+        return {
+            "success": True,
+            "order_id": payment.order_id,
+            "amount": payment.amount,
+            "status": payment.status,
+            "response_code": params.get("vnp_ResponseCode"),
+            "message": "Payment response received"
+        }
+
+    def handle_ipn(self, params: dict) -> dict:
+
+        try:
+            if not self.vnpay_service.verify_ipn_response(params):
+                return {
+                    "RspCode": "97",
+                    "Message": "Invalid signature"
+                }
+
+            order_id = params.get("vnp_TxnRef")
+
+            if not order_id:
+                return {
+                    "RspCode": "01",
+                    "Message": "Order not found"
+                }
+
+            payment = self.payment_repository.find_by_order_id(order_id)
+
+            if not payment:
+                return {
+                    "RspCode": "01",
+                    "Message": "Order not found"
+                }
+
+            amount = params.get("vnp_Amount")
+
+            if not amount or not amount.isdigit():
+                return {
+                    "RspCode": "04",
+                    "Message": "Invalid amount"
+                }
+
+            if int(amount) != payment.amount * 100:
+                return {
+                    "RspCode": "04",
+                    "Message": "Invalid amount"
+                }
+
+            if payment.status != PaymentStatusEnum.PENDING.value:
+                return {
+                    "RspCode": "02",
+                    "Message": "Order already confirmed"
+                }
+
+            response_code = params.get("vnp_ResponseCode")
+            transaction_status = params.get("vnp_TransactionStatus")
+            transaction_no = params.get("vnp_TransactionNo")
+
+            if response_code == "00" and transaction_status == "00":
+                payment.status = PaymentStatusEnum.SUCCESS.value
+                event = PaymentEventEnum.PAYMENT_SUCCESS.value
+                message = "Payment completed successfully"
+            else:
+                payment.status = PaymentStatusEnum.FAILED.value
+                event = PaymentEventEnum.PAYMENT_FAILED.value
+                message = "Payment failed"
+
+            payment.vnp_transaction_no = transaction_no
+            payment.response_code = response_code
+
+            self.payment_repository.update(payment)
+
+            self.payment_log_repository.save(
+                PaymentLog(
+                    payment_id=payment.id,
+                    event=event,
+                    response_code=response_code,
+                    transaction_no=transaction_no,
+                    message=message
+                )
+            )
+
+            self.db.commit()
+
+            return {
+                "RspCode": "00",
+                "Message": "Confirm Success"
+            }
+
+        except Exception:
+            self.db.rollback()
+
+            return {
+                "RspCode": "99",
+                "Message": "Unknown error"
+            }

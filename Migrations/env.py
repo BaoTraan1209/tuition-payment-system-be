@@ -1,11 +1,13 @@
-
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import engine_from_config, pool
 
 from config.db import Base, engine
+
+# Import tất cả models để Alembic nhận diện
 from Models.user import User
+from Models.payment import Payment
+from Models.payment_log import PaymentLog
 
 config = context.config
 

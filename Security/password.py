@@ -1,9 +1,13 @@
-from pwdlib import PasswordHash
+import bcrypt
 
-pwd = PasswordHash.recommended()
+def hash_password(password: str) -> str:
+    return bcrypt.hashpw(
+        password.encode("utf-8"),
+        bcrypt.gensalt()
+    ).decode("utf-8")
 
-def hash_password(password):
-    return pwd.hash(password)
-
-def verify_password(password, hashed):
-    return pwd.verify(password, hashed)
+def verify_password(password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(
+        password.encode("utf-8"),
+        hashed_password.encode("utf-8")
+    )
