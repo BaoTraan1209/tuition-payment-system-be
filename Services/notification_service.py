@@ -40,3 +40,18 @@ def send_otp_email(to_email, otp):
                 iBanking.
                 """
     return send_email(to_email, subject, body)
+
+
+def send_payment_success_email(to_email, payment_id):
+    subject = "iBanking - Tuition Fee Successfully Paid"
+    body = f"""
+                Hello,
+
+                Your payment with ID {payment_id} has been successfully processed.
+
+                Thank you for using iBanking.
+
+                Best regards,
+                iBanking.
+                """
+    return send_email(to_email, subject, body)
