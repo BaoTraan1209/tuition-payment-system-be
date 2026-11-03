@@ -10,10 +10,12 @@ ENV_FILE = Path(__file__).resolve().parent / ".env"
 load_dotenv(ENV_FILE, override=True)
 
 from Controllers.auth_controller import router as auth_router
+from Controllers.tuition_fee_controller import router as tuition_fee_router
+from Controllers.payment_controller import router as payment_router
+
 from Controllers.transaction_controller import router as transaction_router
 from Controllers.otp_controller import router as otp_router
 from Controllers.tuition_controller import router as tuition_router
-from Controllers.payment_controller import router as payment_router
 from Controllers.notification_controller import router as notification_router
 from Controllers.user_controller import router as user_router
 from Controllers.account_controller import router as account_router
@@ -51,12 +53,14 @@ app.add_middleware(
 )
 
 app.include_router(auth_router)
+app.include_router(tuition_fee_router)
+app.include_router(payment_router)
+
 app.include_router(user_router)
 app.include_router(account_router)
 app.include_router(transaction_router)
 app.include_router(otp_router)
 app.include_router(tuition_router)
-app.include_router(payment_router)
 app.include_router(notification_router)
 
 

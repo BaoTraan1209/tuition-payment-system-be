@@ -19,6 +19,14 @@ class PaymentRepository(IPaymentRepository):
             Payment.order_id == order_id
         ).first()
 
+    def find_by_user_id(self, user_id: str) -> list[Payment]:
+        return (
+            self.db.query(Payment)
+            .filter(Payment.user_id == user_id)
+            .order_by(Payment.created_at.desc())
+            .all()
+        )
+
     def save(self, payment: Payment) -> None:
         self.db.add(payment)
         self.db.flush()

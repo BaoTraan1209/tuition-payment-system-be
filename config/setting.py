@@ -14,3 +14,7 @@ APP_PORT = int(os.getenv("APP_PORT", "8000"))
 APP_TIMEZONE = ZoneInfo(
     os.getenv("APP_TIMEZONE", "Asia/Ho_Chi_Minh")
 )
+
+
+USERNAME_ADMIN = os.getenv("USERNAME_ADMIN", "admin")
+PASSWORD_ADMIN = os.getenv("PASSWORD_ADMIN", "")

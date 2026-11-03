@@ -26,7 +26,7 @@ def create_payment(
 
     result = payment_service.create_payment(
         user_id=str(current_user.id),
-        amount=data.amount,
+        tuition_fee_id=data.tuition_fee_id,
         ip_address=ip_address
     )
 
@@ -42,6 +42,20 @@ def create_payment(
         msg="Payment URL created successfully"
     )
 
+@router.get("/history")
+def get_payment_history(
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    result = PaymentService(db).get_payment_history(
+        user_id=str(current_user.id)
+    )
+
+    return send_success_response(
+        data=result,
+        msg="Payment history retrieved successfully"
+    )
+
 @router.get("/vnpay/return")
 def vnpay_return(
     request: Request,
@@ -51,6 +65,7 @@ def vnpay_return(
 
     return PaymentService(db).handle_return(params)
 
+
 @router.get("/vnpay/ipn")
 def vnpay_ipn(
     request: Request,
@@ -59,3 +74,20 @@ def vnpay_ipn(
     params = dict(request.query_params)
 
     return PaymentService(db).handle_ipn(params)
+
+
+@router.get("/status/{order_id}")
+def get_payment_status(
+    order_id: str,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    result = PaymentService(db).get_payment_status(
+        order_id=order_id,
+        user_id=str(current_user.id)
+    )
+
+    return send_success_response(
+        data=result,
+        msg="Payment status retrieved successfully"
+    )

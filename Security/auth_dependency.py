@@ -1,3 +1,4 @@
+
 from uuid import UUID
 
 from fastapi import Depends, HTTPException
@@ -31,16 +32,21 @@ def get_current_user(
                 detail="Token không hợp lệ"
             )
 
+        if payload.get("role") != "student":
+            raise HTTPException(
+                status_code=403,
+                detail="Không có quyền truy cập"
+            )
+
         user_id = str(UUID(payload["sub"]))
-        
+
     except (JWTError, KeyError, ValueError, TypeError):
         raise HTTPException(
             status_code=401,
             detail="Token không hợp lệ"
         )
 
-    user_repository = UserRepository(db)
-    user = user_repository.find_by_id(user_id)
+    user = UserRepository(db).find_by_id(user_id)
 
     if user is None:
         raise HTTPException(

@@ -13,6 +13,10 @@ class IPaymentRepository(ABC):
         pass
 
     @abstractmethod
+    def find_by_user_id(self, user_id: str) -> list[Payment]:
+        pass
+
+    @abstractmethod
     def save(self, payment: Payment) -> None:
         pass
 

@@ -8,6 +8,7 @@ from config.db import Base, engine
 from Models.user import User
 from Models.payment import Payment
 from Models.payment_log import PaymentLog
+from Models.tuition_fee import TuitionFee
 
 config = context.config
 

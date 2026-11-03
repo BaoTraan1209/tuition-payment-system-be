@@ -1,10 +1,7 @@
 from pydantic import BaseModel, Field
 
 class CreatePaymentRequest(BaseModel):
-    amount: int = Field(
-        gt=0,
-        description="Payment amount in VND"
-    )
+    tuition_fee_id: int = Field(gt=0)
 
 class CreatePaymentResponse(BaseModel):
     order_id: str

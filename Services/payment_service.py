@@ -1,4 +1,3 @@
-
 import uuid
 
 from sqlalchemy.orm import Session
@@ -8,11 +7,13 @@ from Models.payment_log import PaymentLog
 
 from Repositories.payment_repository import PaymentRepository
 from Repositories.payment_log_repository import PaymentLogRepository
+from Repositories.tuition_fee_repository import TuitionFeeRepository
 
 from VNPAY.Services.vnpay_service import VnpayService
 
 from Enums.payment_status_enum import PaymentStatusEnum
 from Enums.payment_event_enum import PaymentEventEnum
+from Enums.tuition_fee_status_enum import TuitionFeeStatusEnum
 
 
 class PaymentService:
@@ -22,17 +23,26 @@ class PaymentService:
 
         self.payment_repository = PaymentRepository(db)
         self.payment_log_repository = PaymentLogRepository(db)
+        self.tuition_fee_repository = TuitionFeeRepository(db)
+
         self.vnpay_service = VnpayService()
 
     def create_payment(
         self,
         user_id: str,
-        amount: int,
+        tuition_fee_id: int,
         ip_address: str
     ) -> dict:
 
-        if amount <= 0:
-            raise ValueError("Payment amount must be greater than zero")
+        tuition_fee = self.tuition_fee_repository.find_by_id(tuition_fee_id)
+
+        if not tuition_fee or str(tuition_fee.user_id) != str(user_id):
+            raise ValueError("Tuition fee not found")
+
+        if tuition_fee.status != TuitionFeeStatusEnum.UNPAID.value:
+            raise ValueError("Tuition fee is not available for payment")
+
+        amount = tuition_fee.amount
 
         try:
             order_id = uuid.uuid4().hex
@@ -40,6 +50,7 @@ class PaymentService:
             payment = Payment(
                 order_id=order_id,
                 user_id=user_id,
+                tuition_fee_id=tuition_fee.id,
                 amount=amount,
                 status=PaymentStatusEnum.PENDING.value
             )
@@ -70,6 +81,21 @@ class PaymentService:
         except Exception:
             self.db.rollback()
             raise
+
+    def get_payment_history(self, user_id: str):
+        payments = self.payment_repository.find_by_user_id(user_id)
+
+        return [
+            {
+                "order_id": payment.order_id,
+                "amount": payment.amount,
+                "status": payment.status,
+                "transaction_no": payment.vnp_transaction_no,
+                "response_code": payment.response_code,
+                "created_at": payment.created_at.isoformat()
+            }
+            for payment in payments
+        ]
 
     def handle_return(self, params: dict) -> dict:
 
@@ -169,10 +195,28 @@ class PaymentService:
 
             if response_code == "00" and transaction_status == "00":
                 payment.status = PaymentStatusEnum.SUCCESS.value
+
+                tuition_fee = self.tuition_fee_repository.find_by_id(
+                    payment.tuition_fee_id
+                )
+
+                if not tuition_fee:
+                    self.db.rollback()
+                    return {
+                        "RspCode": "01",
+                        "Message": "Tuition fee not found"
+                    }
+
+                tuition_fee.status = TuitionFeeStatusEnum.PAID.value
+
                 event = PaymentEventEnum.PAYMENT_SUCCESS.value
                 message = "Payment completed successfully"
+
+                self.tuition_fee_repository.update(tuition_fee)
+
             else:
                 payment.status = PaymentStatusEnum.FAILED.value
+
                 event = PaymentEventEnum.PAYMENT_FAILED.value
                 message = "Payment failed"
 
@@ -205,3 +249,22 @@ class PaymentService:
                 "RspCode": "99",
                 "Message": "Unknown error"
             }
+
+    def get_payment_status(
+        self,
+        order_id: str,
+        user_id: str
+    ) -> dict:
+
+        payment = self.payment_repository.find_by_order_id(order_id)
+
+        if not payment or str(payment.user_id) != str(user_id):
+            raise ValueError("Payment not found")
+
+        return {
+            "order_id": payment.order_id,
+            "amount": payment.amount,
+            "status": payment.status,
+            "transaction_no": payment.vnp_transaction_no,
+            "response_code": payment.response_code
+        }

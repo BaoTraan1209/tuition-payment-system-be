@@ -15,13 +15,14 @@ REFRESH_TOKEN_EXPIRE_DAYS = int(
 )
 
 
-def create_access_token(id: str) -> str:
+def create_access_token(id: str, role: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(
         minutes=ACCESS_TOKEN_EXPIRE_MINUTES
     )
 
     payload = {
         "sub": id,
+        "role": role,
         "type": "access",
         "exp": expire,
     }
@@ -29,13 +30,14 @@ def create_access_token(id: str) -> str:
     return jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def create_refresh_token(id: str) -> str:
+def create_refresh_token(id: str, role: str) -> str:
     expire = datetime.now(timezone.utc) + timedelta(
         days=REFRESH_TOKEN_EXPIRE_DAYS
     )
 
     payload = {
         "sub": id,
+        "role": role,
         "type": "refresh",
         "exp": expire,
     }

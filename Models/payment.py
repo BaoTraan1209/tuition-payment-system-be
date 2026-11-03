@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, func
 from config.db import Base
 from Enums.payment_status_enum import PaymentStatusEnum
 
+
 class Payment(Base):
     __tablename__ = "payments"
 
@@ -13,6 +14,12 @@ class Payment(Base):
     user_id = Column(
         String(36),
         ForeignKey("users.id"),
+        nullable=False
+    )
+
+    tuition_fee_id = Column(
+        Integer,
+        ForeignKey("tuition_fees.id"),
         nullable=False
     )
 
