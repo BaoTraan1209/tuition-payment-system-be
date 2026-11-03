@@ -22,3 +22,21 @@ def send_email(to_email, subject, body):
         print(f"Email sent to {to_email}")
     except Exception as e:
         print(f"Failed to send email: {e}")
+        return False
+    
+
+def send_otp_email(to_email, otp):
+    subject = "iBanking - OTP Verification"
+    body = f"""
+                Hello,
+
+                Your OTP verification code is: {otp}
+
+                This code will expire in 5 minutes.
+
+                Please do not share this code with anyone.
+
+                Best regards,
+                iBanking.
+                """
+    return send_email(to_email, subject, body)
