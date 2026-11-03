@@ -25,20 +25,30 @@ def send_email(to_email, subject, body):
         return False
     
 
-def send_otp_email(to_email, otp):
+def send_otp_email(to_email, otp, expire_minutes=5):
     subject = "iBanking - OTP Verification"
     body = f"""
-                Hello,
+                Dear User,
 
-                Your OTP verification code is: {otp}
+                You have requested to verify a tuition payment.
 
-                This code will expire in 5 minutes.
+                Your One-Time Password (OTP) is:
 
-                Please do not share this code with anyone.
+                {otp}
+
+                This OTP is valid for {expire_minutes} minutes.
+
+                For your security:
+                - Do not share this OTP with anyone.
+                - This OTP can only be used once.
+                - If you did not initiate this request, please ignore this email.
 
                 Best regards,
-                iBanking.
-                """
+                Tuition Payment System
+
+                Automated Security Notification
+                Please do not reply to this email.
+            """
     return send_email(to_email, subject, body)
 
 
