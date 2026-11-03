@@ -1,5 +1,7 @@
+
 import uuid
 
+from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from Models.payment import Payment
@@ -34,17 +36,40 @@ class PaymentService:
         ip_address: str
     ) -> dict:
 
-        tuition_fee = self.tuition_fee_repository.find_by_id(tuition_fee_id)
-
-        if not tuition_fee or str(tuition_fee.user_id) != str(user_id):
-            raise ValueError("Tuition fee not found")
-
-        if tuition_fee.status != TuitionFeeStatusEnum.UNPAID.value:
-            raise ValueError("Tuition fee is not available for payment")
-
-        amount = tuition_fee.amount
-
         try:
+            tuition_fee = self.tuition_fee_repository.find_by_id_for_update(
+                tuition_fee_id
+            )
+
+            if not tuition_fee or str(tuition_fee.user_id) != str(user_id):
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Tuition fee not found"
+                )
+
+            if tuition_fee.status == TuitionFeeStatusEnum.PAID.value:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="This tuition fee has already been paid"
+                )
+
+            if tuition_fee.status != TuitionFeeStatusEnum.UNPAID.value:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Tuition fee is not available for payment"
+                )
+
+            pending_payment = self.payment_repository.find_pending_by_tuition_fee_id(
+                tuition_fee_id
+            )
+
+            if pending_payment:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="A payment transaction is already pending"
+                )
+
+            amount = tuition_fee.amount
             order_id = uuid.uuid4().hex
 
             payment = Payment(
@@ -78,11 +103,16 @@ class PaymentService:
                 "payment_url": payment_url
             }
 
+        except HTTPException:
+            self.db.rollback()
+            raise
+
         except Exception:
             self.db.rollback()
             raise
 
     def get_payment_history(self, user_id: str):
+
         payments = self.payment_repository.find_by_user_id(user_id)
 
         return [
@@ -123,7 +153,7 @@ class PaymentService:
 
         amount = params.get("vnp_Amount")
 
-        if not amount or not amount.isdigit():
+        if not amount or not str(amount).isdigit():
             return {
                 "success": False,
                 "message": "Invalid payment amount"
@@ -161,7 +191,9 @@ class PaymentService:
                     "Message": "Order not found"
                 }
 
-            payment = self.payment_repository.find_by_order_id(order_id)
+            payment = self.payment_repository.find_by_order_id_for_update(
+                order_id
+            )
 
             if not payment:
                 return {
@@ -171,7 +203,7 @@ class PaymentService:
 
             amount = params.get("vnp_Amount")
 
-            if not amount or not amount.isdigit():
+            if not amount or not str(amount).isdigit():
                 return {
                     "RspCode": "04",
                     "Message": "Invalid amount"
@@ -194,9 +226,8 @@ class PaymentService:
             transaction_no = params.get("vnp_TransactionNo")
 
             if response_code == "00" and transaction_status == "00":
-                payment.status = PaymentStatusEnum.SUCCESS.value
 
-                tuition_fee = self.tuition_fee_repository.find_by_id(
+                tuition_fee = self.tuition_fee_repository.find_by_id_for_update(
                     payment.tuition_fee_id
                 )
 
@@ -207,12 +238,21 @@ class PaymentService:
                         "Message": "Tuition fee not found"
                     }
 
-                tuition_fee.status = TuitionFeeStatusEnum.PAID.value
+                payment.status = PaymentStatusEnum.SUCCESS.value
+
+                if tuition_fee.status == TuitionFeeStatusEnum.PAID.value:
+                    message = (
+                        "Payment succeeded but tuition fee was already paid. "
+                        "Manual refund or reconciliation is required."
+                    )
+                else:
+                    tuition_fee.status = TuitionFeeStatusEnum.PAID.value
+
+                    self.tuition_fee_repository.update(tuition_fee)
+
+                    message = "Payment completed successfully"
 
                 event = PaymentEventEnum.PAYMENT_SUCCESS.value
-                message = "Payment completed successfully"
-
-                self.tuition_fee_repository.update(tuition_fee)
 
             else:
                 payment.status = PaymentStatusEnum.FAILED.value
@@ -259,7 +299,10 @@ class PaymentService:
         payment = self.payment_repository.find_by_order_id(order_id)
 
         if not payment or str(payment.user_id) != str(user_id):
-            raise ValueError("Payment not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Payment not found"
+            )
 
         return {
             "order_id": payment.order_id,
