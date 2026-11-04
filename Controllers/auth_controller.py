@@ -49,7 +49,6 @@ def login(
     if username_valid and password_valid:
         result = {
             "access_token": create_access_token("admin", "admin"),
-            "refresh_token": create_refresh_token("admin", "admin"),
             "token_type": "bearer",
             "expires_in": get_token_ttl(),
             "refresh_expires_in": REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,
@@ -77,7 +76,6 @@ def login(
 
     result = {
         "access_token": create_access_token(str(user.id), "student"),
-        "refresh_token": create_refresh_token(str(user.id), "student"),
         "token_type": "bearer",
         "expires_in": get_token_ttl(),
         "refresh_expires_in": REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60,

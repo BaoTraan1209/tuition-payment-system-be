@@ -1,75 +1,96 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment OTP Verification</title>
+    <title>iBanking - Mã OTP thanh toán học phí</title>
 </head>
-<body style="margin:0;padding:0;background-color:#f7fafc;font-family:Arial,sans-serif;color:#2d3748;">
-    <div style="max-width:600px;margin:40px auto;background:#ffffff;border:1px solid #e2e8f0;">
+<!--
+    Giao diện đồng bộ với FE iBanking (màu đỏ #a8302f, thẻ bo góc).
+    LƯU Ý: BE điền dữ liệu bằng template.format(...)
+    -> KHÔNG dùng thẻ <style> và KHÔNG thêm dấu ngoặc nhọn nào khác
+       ngoài các biến: otp, expire_minutes
+-->
+<body style="margin:0;padding:0;background-color:#f8f5f5;font-family:Arial,Helvetica,sans-serif;color:#292323;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f5f5;padding:32px 12px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #eadada;border-radius:20px;overflow:hidden;">
 
-        <div style="background:#2c5282;color:#ffffff;padding:32px 40px;">
-            <h1 style="margin:0;font-size:22px;">Payment Verification</h1>
-            <p style="margin:6px 0 0;color:#cbd5e0;font-size:14px;">
-                Tuition Payment Security Notification
-            </p>
-        </div>
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background:#a8302f;background-image:linear-gradient(135deg,#a8302f,#c94a47);padding:26px 32px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="width:44px;height:44px;background:#ffffff;border-radius:13px;text-align:center;vertical-align:middle;font-size:22px;color:#a8302f;font-weight:bold;">
+                                        iB
+                                    </td>
+                                    <td style="padding-left:12px;">
+                                        <div style="color:#ffffff;font-size:20px;font-weight:bold;">iBanking</div>
+                                        <div style="color:#ffe6e4;font-size:12px;margin-top:2px;">Thanh toán học phí TDTU</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-        <div style="padding:40px;">
-            <div style="background:#eff6ff;border-left:3px solid #2563eb;padding:16px 20px;">
-                <p style="margin:0;color:#1e40af;font-size:14px;">
-                    A payment verification request has been initiated.
-                </p>
-            </div>
+                    <!-- BODY -->
+                    <tr>
+                        <td style="padding:32px;">
+                            <p style="margin:26px 0 8px;font-size:15px;">Xin chào,</p>
 
-            <p style="margin-top:28px;">Hello,</p>
+                            <p style="margin:0;font-size:14px;line-height:1.6;color:#6e5f5f;">
+                                Vui lòng nhập mã OTP dưới đây để xác nhận giao dịch thanh toán học phí trên iBanking.
+                            </p>
 
-            <p style="font-size:14px;color:#4a5568;">
-                Please use the following One-Time Password (OTP)
-                to verify your tuition payment.
-            </p>
+                            <!-- OTP -->
+                            <div style="margin:28px 0;padding:24px 16px;background:#fff7f6;border:1px dashed #e5bdbb;border-radius:16px;text-align:center;">
+                                <div style="font-size:11px;font-weight:bold;letter-spacing:1px;color:#8a7777;">
+                                    MÃ XÁC THỰC OTP
+                                </div>
 
-            <div style="text-align:center;margin:32px 0;padding:24px;background:#f7fafc;border:1px solid #e2e8f0;">
-                <p style="margin:0 0 12px;color:#718096;font-size:13px;">
-                    YOUR VERIFICATION CODE
-                </p>
+                                <div style="margin:14px 0;font-size:38px;font-weight:bold;letter-spacing:10px;color:#a8302f;">
+                                    {otp}
+                                </div>
 
-                <h1 style="margin:0;color:#2c5282;font-size:36px;letter-spacing:8px;">
-                    {otp}
-                </h1>
+                                <div style="display:inline-block;padding:6px 14px;background:#ffebea;border-radius:20px;color:#ba3633;font-size:12px;font-weight:bold;">
+                                    Mã hết hạn sau {expire_minutes} phút
+                                </div>
+                            </div>
 
-                <p style="margin:16px 0 0;color:#e53e3e;font-size:13px;">
-                    Expires in {expire_minutes} minutes
-                </p>
-            </div>
+                            <p style="margin:0 0 8px;font-size:14px;font-weight:bold;color:#292323;">
+                                Để bảo vệ tài khoản của bạn:
+                            </p>
 
-            <p style="font-size:14px;color:#4a5568;">
-                For your security:
-            </p>
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;color:#6e5f5f;line-height:1.6;">
+                                <tr>
+                                    <td style="padding:4px 0;">&#8226;&nbsp; Không chia sẻ mã OTP cho bất kỳ ai, kể cả nhân viên iBanking.</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:4px 0;">&#8226;&nbsp; Mỗi mã OTP chỉ sử dụng được một lần.</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:4px 0;">&#8226;&nbsp; Nếu bạn không thực hiện giao dịch này, vui lòng bỏ qua email.</td>
+                                </tr>
+                            </table>
 
-            <ul style="font-size:14px;color:#4a5568;line-height:1.8;">
-                <li>Do not share this OTP with anyone.</li>
-                <li>This OTP can only be used once.</li>
-                <li>If you did not initiate this request, please ignore this email.</li>
-            </ul>
+                            <div style="border-top:1px solid #f1e5e4;margin:28px 0 0;padding-top:18px;font-size:12px;color:#9b8a8a;">
+                                Đây là email tự động, vui lòng không trả lời email này.
+                            </div>
+                        </td>
+                    </tr>
 
-            <hr style="border:none;border-top:1px solid #e2e8f0;margin:28px 0;">
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background:#fff5f4;border-top:1px solid #f0dddd;padding:18px 32px;text-align:center;">
+                            <div style="font-size:13px;font-weight:bold;color:#a8302f;">iBanking · Tuition Payment System</div>
+                            <div style="margin-top:4px;font-size:12px;color:#9b8a8a;">Nhanh chóng - An toàn - Tiện lợi</div>
+                        </td>
+                    </tr>
 
-            <p style="font-size:13px;color:#718096;">
-                This is an automated notification. Please do not reply to this email.
-            </p>
-        </div>
-
-        <div style="background:#f7fafc;padding:24px 40px;text-align:center;border-top:1px solid #e2e8f0;">
-            <p style="margin:0;color:#2d3748;font-size:13px;font-weight:bold;">
-                Tuition Payment System
-            </p>
-            <p style="margin:6px 0 0;color:#718096;font-size:12px;">
-                Automated Security Notification
-            </p>
-        </div>
-
-    </div>
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>

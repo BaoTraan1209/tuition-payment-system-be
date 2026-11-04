@@ -1,139 +1,121 @@
-
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Successful</title>
+    <title>iBanking - Thanh toán học phí thành công</title>
 </head>
+<!--
+    Giao diện đồng bộ với trang "Kết quả thanh toán" trên FE iBanking.
+    LƯU Ý: BE điền dữ liệu bằng template.format(...)
+    -> KHÔNG dùng thẻ <style> và KHÔNG thêm dấu ngoặc nhọn nào khác
+       ngoài các biến: fullname, payment_id, order_id, tuition_fee_id,
+       amount, transaction_no, paid_at
+-->
+<body style="margin:0;padding:0;background-color:#f8f5f5;font-family:Arial,Helvetica,sans-serif;color:#292323;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f5f5;padding:32px 12px;">
+        <tr>
+            <td align="center">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid #eadada;border-radius:20px;overflow:hidden;">
 
-<body style="margin:0;padding:0;background-color:#f7fafc;font-family:Arial,sans-serif;color:#2d3748;">
+                    <!-- HEADER -->
+                    <tr>
+                        <td style="background:#a8302f;background-image:linear-gradient(135deg,#a8302f,#c94a47);padding:26px 32px;">
+                            <table role="presentation" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="width:44px;height:44px;background:#ffffff;border-radius:13px;text-align:center;vertical-align:middle;font-size:22px;color:#a8302f;font-weight:bold;">
+                                        iB
+                                    </td>
+                                    <td style="padding-left:12px;">
+                                        <div style="color:#ffffff;font-size:20px;font-weight:bold;">iBanking</div>
+                                        <div style="color:#ffe6e4;font-size:12px;margin-top:2px;">Thanh toán học phí TDTU</div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
 
-<div style="max-width:600px;margin:40px auto;background:#ffffff;border:1px solid #e2e8f0;">
+                    <!-- KẾT QUẢ -->
+                    <tr>
+                        <td style="padding:32px 32px 8px;text-align:center;">
+                            <div style="width:62px;height:62px;line-height:62px;margin:0 auto 16px;background:#0f6b52;border-radius:50%;color:#ffffff;font-size:32px;font-weight:bold;box-shadow:0 0 0 8px #e5f4ee;">
+                                &#10003;
+                            </div>
+                            <div style="font-size:22px;font-weight:bold;color:#292323;">
+                                Thanh toán học phí thành công!
+                            </div>
+                            <p style="margin:8px 0 0;font-size:13px;color:#7e7070;">
+                                Xin chào <b style="color:#292323;">{fullname}</b>, giao dịch của bạn đã được ghi nhận vào hệ thống.
+                            </p>
+                        </td>
+                    </tr>
 
-    <div style="background:#276749;color:#ffffff;padding:32px 40px;border-bottom:3px solid #22543d;">
-        <h1 style="margin:0;font-size:22px;">Payment Successful</h1>
-        <p style="margin:6px 0 0;font-size:14px;color:#c6f6d5;">
-            Tuition Fee Payment Confirmation
-        </p>
-    </div>
+                    <!-- SỐ TIỀN -->
+                    <tr>
+                        <td style="padding:20px 32px 0;">
+                            <div style="background:#fff7f6;border:1px solid #f0d8d6;border-radius:16px;padding:18px 20px;text-align:center;">
+                                <div style="font-size:12px;font-weight:bold;color:#6e5f5f;">Số tiền đã thanh toán</div>
+                                <div style="margin-top:6px;font-size:28px;font-weight:bold;color:#a8302f;">{amount}</div>
+                            </div>
+                        </td>
+                    </tr>
 
-    <div style="padding:40px;">
+                    <!-- BIÊN LAI -->
+                    <tr>
+                        <td style="padding:24px 32px 8px;">
+                            <div style="font-size:11px;font-weight:bold;letter-spacing:0.6px;color:#8a7777;margin-bottom:6px;">
+                                CHI TIẾT BIÊN LAI
+                            </div>
 
-        <div style="background:#f0fff4;border-left:3px solid #38a169;padding:16px 20px;margin-bottom:28px;">
-            <p style="margin:0;color:#276749;font-size:14px;font-weight:600;">
-                Your tuition fee payment has been processed successfully.
-            </p>
-        </div>
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:13px;">
+                                <tr>
+                                    <td style="padding:11px 0;border-bottom:1px solid #f1e5e4;color:#7e7070;">Mã thanh toán</td>
+                                    <td style="padding:11px 0;border-bottom:1px solid #f1e5e4;text-align:right;font-weight:bold;">#{payment_id}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:11px 0;border-bottom:1px solid #f1e5e4;color:#7e7070;">Mã đơn hàng</td>
+                                    <td style="padding:11px 0;border-bottom:1px solid #f1e5e4;text-align:right;font-weight:bold;word-break:break-all;">{order_id}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:11px 0;border-bottom:1px solid #f1e5e4;color:#7e7070;">Mã giao dịch VNPAY</td>
+                                    <td style="padding:11px 0;border-bottom:1px solid #f1e5e4;text-align:right;font-weight:bold;">{transaction_no}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:11px 0;border-bottom:1px solid #f1e5e4;color:#7e7070;">Mã khoản học phí</td>
+                                    <td style="padding:11px 0;border-bottom:1px solid #f1e5e4;text-align:right;font-weight:bold;">#{tuition_fee_id}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:11px 0;border-bottom:1px solid #f1e5e4;color:#7e7070;">Thời gian</td>
+                                    <td style="padding:11px 0;border-bottom:1px solid #f1e5e4;text-align:right;font-weight:bold;">{paid_at}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding:11px 0;color:#7e7070;">Trạng thái</td>
+                                    <td style="padding:11px 0;text-align:right;">
+                                        <span style="display:inline-block;padding:5px 12px;background:#e5f8ee;border-radius:20px;color:#208254;font-size:11px;font-weight:bold;">
+                                            Đã thanh toán
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
 
-        <p style="font-size:15px;">Dear {fullname},</p>
+                            <div style="border-top:1px solid #f1e5e4;margin:22px 0 0;padding-top:18px;font-size:12px;color:#9b8a8a;line-height:1.6;">
+                                Vui lòng lưu email này làm biên lai. Nếu có thắc mắc về giao dịch, hãy liên hệ phòng Tài chính kèm mã đơn hàng.
+                                <br>Đây là email tự động, vui lòng không trả lời email này.
+                            </div>
+                        </td>
+                    </tr>
 
-        <p style="font-size:14px;color:#4a5568;line-height:1.6;">
-            Thank you for using Tuition Payment System.
-            Your payment has been confirmed successfully.
-            Please find your transaction details below.
-        </p>
+                    <!-- FOOTER -->
+                    <tr>
+                        <td style="background:#fff5f4;border-top:1px solid #f0dddd;padding:18px 32px;text-align:center;">
+                            <div style="font-size:13px;font-weight:bold;color:#a8302f;">iBanking · Tuition Payment System</div>
+                            <div style="margin-top:4px;font-size:12px;color:#9b8a8a;">Nhanh chóng - An toàn - Tiện lợi</div>
+                        </td>
+                    </tr>
 
-        <h3 style="font-size:15px;color:#2d3748;margin-top:28px;">
-            Payment Information
-        </h3>
-
-        <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;">
-
-            <tr>
-                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;width:140px;">
-                    Payment ID
-                </td>
-                <td style="padding:14px 16px;font-size:14px;">
-                    #{payment_id}
-                </td>
-            </tr>
-
-            <tr>
-                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
-                    Order ID
-                </td>
-                <td style="padding:14px 16px;font-size:14px;word-break:break-all;">
-                    {order_id}
-                </td>
-            </tr>
-
-            <tr>
-                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
-                    Tuition Fee ID
-                </td>
-                <td style="padding:14px 16px;font-size:14px;">
-                    #{tuition_fee_id}
-                </td>
-            </tr>
-
-            <tr>
-                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
-                    Amount
-                </td>
-                <td style="padding:14px 16px;font-size:16px;font-weight:700;color:#276749;">
-                    {amount}
-                </td>
-            </tr>
-
-            <tr>
-                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
-                    Payment Method
-                </td>
-                <td style="padding:14px 16px;font-size:14px;">
-                    VNPay
-                </td>
-            </tr>
-
-            <tr>
-                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
-                    Transaction No.
-                </td>
-                <td style="padding:14px 16px;font-size:14px;">
-                    {transaction_no}
-                </td>
-            </tr>
-
-            <tr>
-                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
-                    Payment Status
-                </td>
-                <td style="padding:14px 16px;font-size:14px;font-weight:600;color:#276749;">
-                    SUCCESS
-                </td>
-            </tr>
-
-            <tr>
-                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
-                    Payment Time
-                </td>
-                <td style="padding:14px 16px;font-size:14px;">
-                    {paid_at}
-                </td>
-            </tr>
-
-        </table>
-
-        <div style="background:#f7fafc;padding:18px;margin-top:28px;">
-            <p style="margin:0;font-size:13px;color:#4a5568;line-height:1.7;">
-                Please keep this email as your payment confirmation.
-                If you have any questions regarding your transaction,
-                please contact our support team.
-            </p>
-        </div>
-
-    </div>
-
-    <div style="background:#f7fafc;padding:24px 40px;text-align:center;border-top:1px solid #e2e8f0;">
-        <p style="margin:0 0 4px;color:#2d3748;font-size:13px;font-weight:600;">
-            Tuition Payment System
-        </p>
-        <p style="margin:0;color:#718096;font-size:12px;">
-            This is an automated notification. Please do not reply to this email.
-        </p>
-    </div>
-
-</div>
-
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
