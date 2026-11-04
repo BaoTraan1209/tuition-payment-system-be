@@ -8,7 +8,7 @@ class NotificationResponse(BaseModel):
     notification_id: int
     payer_id: int
     title: str
-    message: str
+    msg: str
     type: str
     is_read: bool
     created_at: datetime | None = None

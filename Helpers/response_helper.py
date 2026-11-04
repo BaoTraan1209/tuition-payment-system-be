@@ -1,7 +1,5 @@
-
 import time
 from typing import Any
-
 
 def send_success_response(
     data: Any = None,
@@ -16,7 +14,6 @@ def send_success_response(
         "msg": msg,
         "time": int(time.time())
     }
-
 
 def send_success_paginate_response(
     data: Any = None,
@@ -41,7 +38,6 @@ def send_success_paginate_response(
         "msg": msg,
         "time": int(time.time())
     }
-
 
 def valid_pagination(
     per_page: int,

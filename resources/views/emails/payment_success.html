@@ -1,0 +1,139 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Successful</title>
+</head>
+
+<body style="margin:0;padding:0;background-color:#f7fafc;font-family:Arial,sans-serif;color:#2d3748;">
+
+<div style="max-width:600px;margin:40px auto;background:#ffffff;border:1px solid #e2e8f0;">
+
+    <div style="background:#276749;color:#ffffff;padding:32px 40px;border-bottom:3px solid #22543d;">
+        <h1 style="margin:0;font-size:22px;">Payment Successful</h1>
+        <p style="margin:6px 0 0;font-size:14px;color:#c6f6d5;">
+            Tuition Fee Payment Confirmation
+        </p>
+    </div>
+
+    <div style="padding:40px;">
+
+        <div style="background:#f0fff4;border-left:3px solid #38a169;padding:16px 20px;margin-bottom:28px;">
+            <p style="margin:0;color:#276749;font-size:14px;font-weight:600;">
+                Your tuition fee payment has been processed successfully.
+            </p>
+        </div>
+
+        <p style="font-size:15px;">Dear {fullname},</p>
+
+        <p style="font-size:14px;color:#4a5568;line-height:1.6;">
+            Thank you for using Tuition Payment System.
+            Your payment has been confirmed successfully.
+            Please find your transaction details below.
+        </p>
+
+        <h3 style="font-size:15px;color:#2d3748;margin-top:28px;">
+            Payment Information
+        </h3>
+
+        <table style="width:100%;border-collapse:collapse;border:1px solid #e2e8f0;">
+
+            <tr>
+                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;width:140px;">
+                    Payment ID
+                </td>
+                <td style="padding:14px 16px;font-size:14px;">
+                    #{payment_id}
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
+                    Order ID
+                </td>
+                <td style="padding:14px 16px;font-size:14px;word-break:break-all;">
+                    {order_id}
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
+                    Tuition Fee ID
+                </td>
+                <td style="padding:14px 16px;font-size:14px;">
+                    #{tuition_fee_id}
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
+                    Amount
+                </td>
+                <td style="padding:14px 16px;font-size:16px;font-weight:700;color:#276749;">
+                    {amount}
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
+                    Payment Method
+                </td>
+                <td style="padding:14px 16px;font-size:14px;">
+                    VNPay
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
+                    Transaction No.
+                </td>
+                <td style="padding:14px 16px;font-size:14px;">
+                    {transaction_no}
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
+                    Payment Status
+                </td>
+                <td style="padding:14px 16px;font-size:14px;font-weight:600;color:#276749;">
+                    SUCCESS
+                </td>
+            </tr>
+
+            <tr>
+                <td style="padding:14px 16px;background:#f7fafc;font-size:14px;font-weight:600;">
+                    Payment Time
+                </td>
+                <td style="padding:14px 16px;font-size:14px;">
+                    {paid_at}
+                </td>
+            </tr>
+
+        </table>
+
+        <div style="background:#f7fafc;padding:18px;margin-top:28px;">
+            <p style="margin:0;font-size:13px;color:#4a5568;line-height:1.7;">
+                Please keep this email as your payment confirmation.
+                If you have any questions regarding your transaction,
+                please contact our support team.
+            </p>
+        </div>
+
+    </div>
+
+    <div style="background:#f7fafc;padding:24px 40px;text-align:center;border-top:1px solid #e2e8f0;">
+        <p style="margin:0 0 4px;color:#2d3748;font-size:13px;font-weight:600;">
+            Tuition Payment System
+        </p>
+        <p style="margin:0;color:#718096;font-size:12px;">
+            This is an automated notification. Please do not reply to this email.
+        </p>
+    </div>
+
+</div>
+
+</body>
+</html>

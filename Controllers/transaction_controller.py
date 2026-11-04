@@ -12,6 +12,6 @@ router = APIRouter(prefix="/transactions", tags=["Transactions"])
 def get_my_transactions(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     try:
         transactions = get_payer_transactions(db, int(current_user.payer_id))
-        return {"success": True, "message": "Transactions retrieved successfully.", "data": transactions}
+        return {"success": True, "msg": "Transactions retrieved successfully.", "data": transactions}
     except Exception:
         raise HTTPException(status_code=500, detail="Unable to retrieve transactions.")

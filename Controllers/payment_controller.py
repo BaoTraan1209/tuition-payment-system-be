@@ -42,6 +42,7 @@ def create_payment(
         msg="Payment URL created successfully"
     )
 
+
 @router.get("/history")
 def get_payment_history(
     current_user=Depends(get_current_user),
@@ -55,6 +56,7 @@ def get_payment_history(
         data=result,
         msg="Payment history retrieved successfully"
     )
+
 
 @router.get("/vnpay/return")
 def vnpay_return(

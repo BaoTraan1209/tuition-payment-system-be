@@ -30,11 +30,11 @@ def get_tuitions(
     _assert_owns_mssv(db, int(current_user.payer_id), mssv)
     try:
         data = get_student_tuitions(db, mssv)
-        return {"success": True, "message": "Tuition records retrieved successfully.", "data": data}
+        return {"success": True, "msg": "Tuition records retrieved successfully.", "data": data}
     except ValueError as error:
         # Empty tuition list is valid: UI can display an empty table.
         if str(error) == "No tuition records found.":
-            return {"success": True, "message": "No tuition records found.", "data": []}
+            return {"success": True, "msg": "No tuition records found.", "data": []}
         raise HTTPException(status_code=404, detail=str(error))
 
 

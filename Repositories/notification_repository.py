@@ -3,7 +3,7 @@ from sqlalchemy import text
 
 def get_notifications(db, payer_id: int):
     rows = db.execute(text("""
-        SELECT notification_id, payer_id, title, message, type, is_read, created_at
+        SELECT notification_id, payer_id, title, msg, type, is_read, created_at
         FROM notifications
         WHERE payer_id = :payer_id
         ORDER BY created_at DESC, notification_id DESC
@@ -21,11 +21,11 @@ def mark_read(db, payer_id: int, notification_id: int):
     return result.rowcount == 1
 
 
-def create_notification(db, payer_id: int, title: str, message: str, kind: str = "INFO"):
+def create_notification(db, payer_id: int, title: str, msg: str, kind: str = "INFO"):
     result = db.execute(text("""
-        INSERT INTO notifications (payer_id, title, message, type, is_read, created_at)
-        VALUES (:payer_id, :title, :message, :type, 0, NOW())
-    """), {"payer_id": payer_id, "title": title, "message": message, "type": kind})
+        INSERT INTO notifications (payer_id, title, msg, type, is_read, created_at)
+        VALUES (:payer_id, :title, :msg, :type, 0, NOW())
+    """), {"payer_id": payer_id, "title": title, "msg": msg, "type": kind})
     db.commit()
     return result.lastrowid
 
