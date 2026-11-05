@@ -42,7 +42,6 @@ class PaymentService:
         self.vnpay_service = VnpayService()
         self.otp_service = PaymentOTPService()
 
-    
     def create_payment(
         self,
         user_id: str,
@@ -134,7 +133,6 @@ class PaymentService:
         except Exception:
             self.db.rollback()
             raise
-
 
     def get_payment_history(self, user_id: str):
         payments = self.payment_repository.find_by_user_id(user_id)
@@ -347,7 +345,15 @@ class PaymentService:
                 payment.status = PaymentStatusEnum.FAILED.value
 
                 event = PaymentEventEnum.PAYMENT_FAILED.value
-                msg = "Payment failed"
+
+                if response_code == "51":
+                    msg = "VNPay: Insufficient account balance"
+                else:
+                    msg = (
+                        f"Payment failed. "
+                        f"Response code: {response_code}, "
+                        f"Transaction status: {transaction_status}"
+                    )
 
             payment.vnp_transaction_no = transaction_no
             payment.response_code = response_code
