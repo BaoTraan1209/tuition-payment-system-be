@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 from Models.payment import Payment
 
-
 class IPaymentRepository(ABC):
     @abstractmethod
     def find_by_id(self, id: int) -> Payment | None:

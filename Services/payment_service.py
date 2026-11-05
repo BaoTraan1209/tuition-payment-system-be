@@ -9,10 +9,13 @@ from sqlalchemy.orm import Session
 from Models.payment import Payment
 from Models.payment_log import PaymentLog
 from Models.user import User
+from Models.bank_transaction import BankTransaction
 
 from Repositories.payment_repository import PaymentRepository
 from Repositories.payment_log_repository import PaymentLogRepository
 from Repositories.tuition_fee_repository import TuitionFeeRepository
+from Repositories.bank_account_repository import BankAccountRepository
+from Repositories.bank_transaction_repository import BankTransactionRepository
 
 from VNPAY.Services.vnpay_service import VnpayService
 from Services.payment_otp_service import PaymentOTPService
@@ -20,9 +23,9 @@ from Services.payment_otp_service import PaymentOTPService
 from Enums.payment_status_enum import PaymentStatusEnum
 from Enums.payment_event_enum import PaymentEventEnum
 from Enums.tuition_fee_status_enum import TuitionFeeStatusEnum
+from Enums.bank_transaction_type_enum import BankTransactionTypeEnum
 
 from Helpers.email_helper import send_payment_success_email
-
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +36,13 @@ class PaymentService:
         self.payment_repository = PaymentRepository(db)
         self.payment_log_repository = PaymentLogRepository(db)
         self.tuition_fee_repository = TuitionFeeRepository(db)
+        self.bank_account_repository = BankAccountRepository(db)
+        self.bank_transaction_repository = BankTransactionRepository(db)
 
         self.vnpay_service = VnpayService()
         self.otp_service = PaymentOTPService()
 
+    
     def create_payment(
         self,
         user_id: str,
@@ -98,6 +104,8 @@ class PaymentService:
 
             self.payment_repository.save(payment)
 
+            self.db.flush()
+
             self.payment_log_repository.save(
                 PaymentLog(
                     payment_id=payment.id,
@@ -126,6 +134,7 @@ class PaymentService:
         except Exception:
             self.db.rollback()
             raise
+
 
     def get_payment_history(self, user_id: str):
         payments = self.payment_repository.find_by_user_id(user_id)
@@ -187,7 +196,7 @@ class PaymentService:
             "response_code": params.get("vnp_ResponseCode"),
             "msg": "Payment response received"
         }
-
+    
     def handle_ipn(self, params: dict) -> dict:
         try:
             if not self.vnpay_service.verify_ipn_response(params):
@@ -241,7 +250,6 @@ class PaymentService:
             should_send_email = False
 
             if response_code == "00" and transaction_status == "00":
-
                 tuition_fee = self.tuition_fee_repository.find_by_id_for_update(
                     payment.tuition_fee_id
                 )
@@ -253,22 +261,80 @@ class PaymentService:
                         "msg": "Tuition fee not found"
                     }
 
-                payment.status = PaymentStatusEnum.SUCCESS.value
-
                 if tuition_fee.status == TuitionFeeStatusEnum.PAID.value:
+                    payment.status = PaymentStatusEnum.SUCCESS.value
+
+                    event = PaymentEventEnum.PAYMENT_SUCCESS.value
                     msg = (
-                        "Payment succeeded but tuition fee was already paid. "
-                        "Manual refund or reconciliation is required."
+                        "VNPay payment succeeded but tuition fee was already paid. "
+                        "Manual reconciliation is required."
                     )
 
                 elif tuition_fee.status == TuitionFeeStatusEnum.UNPAID.value:
-                    tuition_fee.status = TuitionFeeStatusEnum.PAID.value
+                    existing_transaction = (
+                        self.bank_transaction_repository.find_by_payment_id(
+                            payment.id
+                        )
+                    )
 
-                    self.tuition_fee_repository.update(tuition_fee)
+                    if existing_transaction:
+                        self.db.rollback()
+                        return {
+                            "RspCode": "02",
+                            "msg": "Bank transaction already recorded"
+                        }
 
-                    should_send_email = True
+                    bank_account = (
+                        self.bank_account_repository.find_by_user_id_for_update(
+                            str(payment.user_id)
+                        )
+                    )
 
-                    msg = "Payment completed successfully"
+                    if not bank_account:
+                        payment.status = PaymentStatusEnum.FAILED.value
+
+                        event = PaymentEventEnum.PAYMENT_FAILED.value
+                        msg = "Simulated bank account not found"
+
+                    elif bank_account.balance < payment.amount:
+                        payment.status = PaymentStatusEnum.FAILED.value
+
+                        event = PaymentEventEnum.PAYMENT_FAILED.value
+                        msg = (
+                            "Insufficient simulated bank account balance. "
+                            f"Required: {payment.amount}, "
+                            f"Available: {bank_account.balance}"
+                        )
+
+                    else:
+                        balance_before = bank_account.balance
+                        bank_account.balance -= payment.amount
+                        balance_after = bank_account.balance
+
+                        self.bank_account_repository.update(bank_account)
+
+                        self.bank_transaction_repository.save(
+                            BankTransaction(
+                                bank_account_id=bank_account.id,
+                                payment_id=payment.id,
+                                amount=payment.amount,
+                                balance_before=balance_before,
+                                balance_after=balance_after,
+                                transaction_type=BankTransactionTypeEnum.DEBIT.value,
+                                description=f"Payment for order {payment.order_id}"
+                            )
+                        )
+
+                        tuition_fee.status = TuitionFeeStatusEnum.PAID.value
+
+                        self.tuition_fee_repository.update(tuition_fee)
+
+                        payment.status = PaymentStatusEnum.SUCCESS.value
+
+                        should_send_email = True
+
+                        event = PaymentEventEnum.PAYMENT_SUCCESS.value
+                        msg = "Payment completed successfully"
 
                 else:
                     self.db.rollback()
@@ -276,8 +342,6 @@ class PaymentService:
                         "RspCode": "04",
                         "msg": "Tuition fee is not available for payment"
                     }
-
-                event = PaymentEventEnum.PAYMENT_SUCCESS.value
 
             else:
                 payment.status = PaymentStatusEnum.FAILED.value
@@ -302,7 +366,6 @@ class PaymentService:
 
             self.db.commit()
 
-            # Send email only when tuition fee changes from UNPAID to PAID
             if should_send_email:
                 try:
                     user = self.db.query(User).filter(

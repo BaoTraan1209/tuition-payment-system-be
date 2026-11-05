@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from Models.payment_log import PaymentLog
 
-
 class IPaymentLogRepository(ABC):
 
     @abstractmethod

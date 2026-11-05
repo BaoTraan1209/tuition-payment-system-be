@@ -9,6 +9,8 @@ from Models.user import User
 from Models.payment import Payment
 from Models.payment_log import PaymentLog
 from Models.tuition_fee import TuitionFee
+from Models.bank_account import BankAccount
+from Models.bank_transaction import BankTransaction
 
 config = context.config
 

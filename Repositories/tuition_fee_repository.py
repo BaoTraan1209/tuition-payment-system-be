@@ -4,9 +4,7 @@ from Models.tuition_fee import TuitionFee
 
 from Contracts.Repositories.tuition_fee_repository_interface import ITuitionFeeRepository
 
-
 class TuitionFeeRepository(ITuitionFeeRepository):
-
     def __init__(self, db: Session):
         self.db = db
 

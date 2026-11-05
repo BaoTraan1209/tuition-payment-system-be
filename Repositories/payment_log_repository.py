@@ -3,9 +3,7 @@ from sqlalchemy.orm import Session
 from Models.payment_log import PaymentLog
 from Contracts.Repositories.payment_log_repository_interface import IPaymentLogRepository
 
-
 class PaymentLogRepository(IPaymentLogRepository):
-
     def __init__(self, db: Session):
         self.db = db
 

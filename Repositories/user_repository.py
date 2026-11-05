@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from Models.user import User
 from Contracts.Repositories.user_repository_interface import IUserRepository
 
-
 class UserRepository(IUserRepository):
     def __init__(self, db: Session):
         self.db = db

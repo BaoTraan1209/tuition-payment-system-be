@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 
 from Models.tuition_fee import TuitionFee
 
-
 class ITuitionFeeRepository(ABC):
     @abstractmethod
     def find_by_id(self, id: int) -> TuitionFee | None:

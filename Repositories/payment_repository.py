@@ -6,9 +6,7 @@ from Contracts.Repositories.payment_repository_interface import IPaymentReposito
 
 from Enums.payment_status_enum import PaymentStatusEnum
 
-
 class PaymentRepository(IPaymentRepository):
-
     def __init__(self, db: Session):
         self.db = db
 
