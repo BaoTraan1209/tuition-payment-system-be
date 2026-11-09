@@ -1,5 +1,5 @@
 from datetime import date
-
+from typing import List
 from sqlalchemy.orm import Session
 
 from Models.tuition_fee import TuitionFee
@@ -38,6 +38,38 @@ class TuitionFeeService:
             self.db.refresh(tuition_fee)
 
             return tuition_fee
+
+        except Exception:
+            self.db.rollback()
+            raise
+
+    def create_tuition_fees_bulk(
+        self,
+        user_ids: List[str],
+        title: str,
+        amount: int,
+        due_date: date,
+        description: str | None = None
+    ) -> List[TuitionFee]:
+
+        try:
+            tuition_fees = [
+                TuitionFee(
+                    user_id=user_id,
+                    title=title,
+                    description=description,
+                    amount=amount,
+                    due_date=due_date,
+                    status=TuitionFeeStatusEnum.UNPAID.value
+                )
+                for user_id in user_ids
+            ]
+
+            self.tuition_fee_repository.save_all(tuition_fees)
+
+            self.db.commit()
+            
+            return tuition_fees
 
         except Exception:
             self.db.rollback()

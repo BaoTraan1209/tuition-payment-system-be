@@ -10,6 +10,7 @@ from Helpers.response_helper import send_success_response
 from schemas.tuition_fee_schema import (
     CreateTuitionFeeRequest,
     CreateTuitionFeeResponse,
+    CreateTuitionFeesBulkRequest,
     TuitionFeeResponse
 )
 
@@ -47,6 +48,40 @@ def create_tuition_fee(
         msg="Tuition fee created successfully"
     )
 
+# Admin tạo khoản học phí cho nhiều sinh viên cùng lúc
+@router.post("/create-bulk")
+def create_tuition_fees_bulk(
+    data: CreateTuitionFeesBulkRequest,
+    current_admin=Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    tuition_fee_service = TuitionFeeService(db)
+
+    tuition_fees = tuition_fee_service.create_tuition_fees_bulk(
+        user_ids=data.user_ids,
+        title=data.title,
+        amount=data.amount,
+        due_date=data.due_date,
+        description=data.description
+    )
+
+    response_data = [
+        TuitionFeeResponse(
+            id=tf.id,
+            user_id=tf.user_id,
+            title=tf.title,
+            description=tf.description,
+            amount=tf.amount,
+            due_date=tf.due_date,
+            status=tf.status
+        ).model_dump()
+        for tf in tuition_fees
+    ]
+
+    return send_success_response(
+        data=response_data,
+        msg=f"Created {len(tuition_fees)} tuition fees successfully"
+    )
 
 # Sinh viên xem danh sách học phí
 @router.get("")

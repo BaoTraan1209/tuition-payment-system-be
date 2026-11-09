@@ -22,3 +22,7 @@ class ITuitionFeeRepository(ABC):
     @abstractmethod
     def update(self, tuition_fee: TuitionFee) -> None:
         pass
+
+    @abstractmethod
+    def save_all(self, tuition_fees: list[TuitionFee]) -> None:
+        pass

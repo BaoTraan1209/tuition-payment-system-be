@@ -37,3 +37,9 @@ class TuitionFeeRepository(ITuitionFeeRepository):
     def update(self, tuition_fee: TuitionFee) -> None:
         self.db.flush()
         self.db.refresh(tuition_fee)
+
+    def save_all(self, tuition_fees: list[TuitionFee]) -> None:
+        self.db.add_all(tuition_fees)
+        self.db.flush()
+        for tuition_fee in tuition_fees:
+            self.db.refresh(tuition_fee)
