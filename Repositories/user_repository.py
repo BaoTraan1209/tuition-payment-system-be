@@ -31,7 +31,15 @@ class UserRepository(IUserRepository):
             .first()
         )
 
+    def get_all_students(self) -> list[User]:
+        return (
+            self.db.query(User)
+            .order_by(User.fullname.asc())
+            .all()
+        )
+
     def save(self, user: User) -> None:
         self.db.add(user)
         self.db.commit()
         self.db.refresh(user)
+

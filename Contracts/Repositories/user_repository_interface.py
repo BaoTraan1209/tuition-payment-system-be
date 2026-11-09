@@ -19,3 +19,7 @@ class IUserRepository(ABC):
     @abstractmethod
     def save(self, user: User) -> None:
         pass
+
+    @abstractmethod
+    def get_all_students(self) -> list[User]:
+        pass

@@ -7,11 +7,11 @@ from sqlalchemy.orm import Session
 
 from config.db import get_db
 from Security.auth_dependency import get_current_user
-from schemas.user_schema import UserProfileResponse, UserProfileUpdate
+from schemas.user_schema import StudentResponse, UserProfileResponse, UserProfileUpdate
 from Services.user_service import UserService
+from Security.admin_dependency import get_current_admin
 
-router = APIRouter(prefix="/users", tags=["Users"])
-
+router = APIRouter(prefix="/api/user", tags=["Users"])
 
 @router.get("/me", response_model=UserProfileResponse)
 def get_my_profile(
@@ -42,3 +42,10 @@ def update_my_profile(
             status_code=409,
             detail="The supplied profile data conflicts with an existing record."
         )
+
+@router.get("/students", response_model=list[StudentResponse])
+def get_all_students(
+    current_admin=Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    return UserService(db).get_all_students()

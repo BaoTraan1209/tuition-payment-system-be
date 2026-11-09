@@ -1,4 +1,6 @@
+import os
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from config.db import get_db
@@ -57,7 +59,7 @@ def get_payment_history(
         msg="Payment history retrieved successfully"
     )
 
-
+# NGỌC chỉnh cái url cứng chỗ này return về giúp anh
 @router.get("/vnpay/return")
 def vnpay_return(
     request: Request,
@@ -65,7 +67,20 @@ def vnpay_return(
 ):
     params = dict(request.query_params)
 
-    return PaymentService(db).handle_return(params)
+    result = PaymentService(db).handle_return(params)
+
+    frontend_url = os.getenv("FRONTEND_URL")
+
+    if not result["success"]:
+        return RedirectResponse(
+            url=f"{frontend_url}/payment/result?status=FAILED",
+            status_code=302
+        )
+
+    return RedirectResponse(
+        url=f"{frontend_url}/payment/result?order_id={result['order_id']}",
+        status_code=302
+    )
 
 
 @router.get("/vnpay/ipn")

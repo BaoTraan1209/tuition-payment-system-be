@@ -81,3 +81,6 @@ class UserService:
         self.user_repository.save(user)
 
         return user
+
+    def get_all_students(self):
+        return self.user_repository.get_all_students()

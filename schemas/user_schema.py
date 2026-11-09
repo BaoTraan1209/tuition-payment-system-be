@@ -14,3 +14,10 @@ class UserProfileUpdate(BaseModel):
     fullname: str | None = Field(default=None, min_length=1, max_length=100)
     phone: str | None = Field(default=None, max_length=20)
     email: str | None = Field(default=None, max_length=100)
+
+class StudentResponse(BaseModel):
+    id: str
+    mssv: str | None = None
+    fullname: str
+    email: str | None = None
+    model_config = ConfigDict(from_attributes=True)
